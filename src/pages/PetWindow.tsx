@@ -9,6 +9,11 @@ function PetWindow() {
   const [gifSrc, setGifSrc] = useState<string | null>(null);
   const [config, setConfig] = useState<AppConfig | null>(null);
   const isDragging = useRef(false);
+  const language = config?.language === "zh-CN" ? "zh-CN" : "en";
+  const emptyHint =
+    language === "zh-CN" ? "双击导入 GIF" : "Double-click to add GIF";
+  const gifFilterName = language === "zh-CN" ? "GIF 图片" : "GIF Images";
+  const petAlt = language === "zh-CN" ? "桌面萌宠" : "Desktop Pet";
 
   const loadGif = useCallback(async () => {
     try {
@@ -61,7 +66,7 @@ function PetWindow() {
     try {
       const selected = await open({
         multiple: false,
-        filters: [{ name: "GIF Images", extensions: ["gif"] }],
+        filters: [{ name: gifFilterName, extensions: ["gif"] }],
       });
       if (selected) {
         await invoke("import_gif", {
@@ -112,7 +117,7 @@ function PetWindow() {
       {gifSrc ? (
         <img
           src={gifSrc}
-          alt="Desktop Pet"
+          alt={petAlt}
           className="pet-gif"
           style={{ transform: `scale(${scale})` }}
           draggable={false}
@@ -120,7 +125,7 @@ function PetWindow() {
       ) : (
         <div className="pet-placeholder" onDoubleClick={handleImportGif}>
           <span>🐾</span>
-          <small>Double-click to add GIF</small>
+          <small>{emptyHint}</small>
         </div>
       )}
     </div>

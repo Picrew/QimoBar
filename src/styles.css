@@ -133,6 +133,23 @@ input[type="checkbox"] {
   accent-color: #4a90d9;
 }
 
+.language-select {
+  min-width: 128px;
+  height: 30px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 0 8px;
+  background: #fff;
+  color: #333;
+  font-size: 12px;
+}
+
+.language-select:focus {
+  outline: none;
+  border-color: #4a90d9;
+  box-shadow: 0 0 0 2px rgba(74, 144, 217, 0.15);
+}
+
 .status-bar {
   background: #e8f5e9;
   color: #2e7d32;
@@ -282,6 +299,12 @@ input[type="checkbox"] {
 
   .setting-control span {
     color: #aaa;
+  }
+
+  .language-select {
+    background: #333;
+    color: #ddd;
+    border-color: #555;
   }
 
   .status-bar {

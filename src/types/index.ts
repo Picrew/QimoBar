@@ -3,12 +3,15 @@ export interface Position {
   y: number;
 }
 
+export type AppLanguage = "en" | "zh-CN";
+
 export interface AppConfig {
   launch_at_startup: boolean;
   click_through: boolean;
   always_on_top: boolean;
   pet_scale: number;
   pet_opacity: number;
+  language: AppLanguage;
   current_asset_id: string | null;
   pet_position: Position | null;
   pet_visible: boolean;

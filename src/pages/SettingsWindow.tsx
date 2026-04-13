@@ -1,14 +1,105 @@
 import { useEffect, useState, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { emit } from "@tauri-apps/api/event";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { open } from "@tauri-apps/plugin-dialog";
-import type { AppConfig, AssetItem } from "../types";
+import type { AppConfig, AppLanguage, AssetItem } from "../types";
+
+const MESSAGES: Record<
+  AppLanguage,
+  {
+    windowTitle: string;
+    sectionDisplay: string;
+    sectionSystem: string;
+    sectionAssets: string;
+    labelScale: string;
+    labelOpacity: string;
+    labelAlwaysOnTop: string;
+    labelClickThrough: string;
+    labelLanguage: string;
+    labelLaunchAtStartup: string;
+    buttonResetPosition: string;
+    buttonImportGif: string;
+    buttonUse: string;
+    loading: string;
+    noGifImported: string;
+    dialogGifImages: string;
+    statusSettingsSaved: string;
+    statusFailedToSave: string;
+    statusGifImported: string;
+    statusImportFailed: string;
+    statusPetChanged: string;
+    statusFailed: string;
+    statusAssetDeleted: string;
+    statusPositionReset: string;
+  }
+> = {
+  en: {
+    windowTitle: "QimoBar Settings",
+    sectionDisplay: "Display",
+    sectionSystem: "System",
+    sectionAssets: "GIF Assets",
+    labelScale: "Scale",
+    labelOpacity: "Opacity",
+    labelAlwaysOnTop: "Always on Top",
+    labelClickThrough: "Click Through",
+    labelLanguage: "Language",
+    labelLaunchAtStartup: "Launch at Startup",
+    buttonResetPosition: "Reset Position",
+    buttonImportGif: "Import GIF...",
+    buttonUse: "Use",
+    loading: "Loading...",
+    noGifImported: "No GIF imported yet",
+    dialogGifImages: "GIF Images",
+    statusSettingsSaved: "Settings saved",
+    statusFailedToSave: "Failed to save: ",
+    statusGifImported: "GIF imported!",
+    statusImportFailed: "Import failed: ",
+    statusPetChanged: "Pet changed!",
+    statusFailed: "Failed: ",
+    statusAssetDeleted: "Asset deleted",
+    statusPositionReset: "Position reset!",
+  },
+  "zh-CN": {
+    windowTitle: "QimoBar 设置",
+    sectionDisplay: "显示",
+    sectionSystem: "系统",
+    sectionAssets: "GIF 素材",
+    labelScale: "缩放",
+    labelOpacity: "透明度",
+    labelAlwaysOnTop: "始终置顶",
+    labelClickThrough: "点击穿透",
+    labelLanguage: "语言",
+    labelLaunchAtStartup: "开机启动",
+    buttonResetPosition: "重置位置",
+    buttonImportGif: "导入 GIF...",
+    buttonUse: "使用",
+    loading: "加载中...",
+    noGifImported: "还没有导入 GIF",
+    dialogGifImages: "GIF 图片",
+    statusSettingsSaved: "设置已保存",
+    statusFailedToSave: "保存失败：",
+    statusGifImported: "GIF 导入成功！",
+    statusImportFailed: "导入失败：",
+    statusPetChanged: "桌宠已切换！",
+    statusFailed: "失败：",
+    statusAssetDeleted: "素材已删除",
+    statusPositionReset: "位置已重置！",
+  },
+};
+
+function normalizeLanguage(language?: string | null): AppLanguage {
+  return language === "zh-CN" ? "zh-CN" : "en";
+}
 
 function SettingsWindow() {
   const [config, setConfig] = useState<AppConfig | null>(null);
   const [assets, setAssets] = useState<AssetItem[]>([]);
   const [previews, setPreviews] = useState<Record<string, string>>({});
   const [status, setStatus] = useState("");
+
+  const currentLanguage = normalizeLanguage(config?.language);
+  const t = MESSAGES[currentLanguage];
 
   const showStatus = (msg: string) => {
     setStatus(msg);
@@ -21,7 +112,10 @@ function SettingsWindow() {
         invoke<AppConfig>("get_config"),
         invoke<AssetItem[]>("get_assets"),
       ]);
-      setConfig(cfg);
+      setConfig({
+        ...cfg,
+        language: normalizeLanguage(cfg.language),
+      });
       setAssets(assetList);
 
       // Load previews for all assets
@@ -48,16 +142,27 @@ function SettingsWindow() {
     loadData();
   }, [loadData]);
 
+  useEffect(() => {
+    getCurrentWebviewWindow().setTitle(t.windowTitle).catch(() => {});
+  }, [t.windowTitle]);
+
   const updateConfig = async (updates: Partial<AppConfig>) => {
     if (!config) return;
-    const newConfig = { ...config, ...updates };
+
+    const newConfig: AppConfig = {
+      ...config,
+      ...updates,
+      language: normalizeLanguage(updates.language ?? config.language),
+    };
+    const nextLanguage = normalizeLanguage(newConfig.language);
+
     try {
       await invoke("update_config", { config: newConfig });
       setConfig(newConfig);
       emit("config-updated", {});
-      showStatus("Settings saved");
+      showStatus(MESSAGES[nextLanguage].statusSettingsSaved);
     } catch (e) {
-      showStatus("Failed to save: " + String(e));
+      showStatus(`${MESSAGES[currentLanguage].statusFailedToSave}${String(e)}`);
     }
   };
 
@@ -65,7 +170,7 @@ function SettingsWindow() {
     try {
       const selected = await open({
         multiple: false,
-        filters: [{ name: "GIF Images", extensions: ["gif"] }],
+        filters: [{ name: t.dialogGifImages, extensions: ["gif"] }],
       });
       if (selected) {
         await invoke("import_gif", {
@@ -74,10 +179,10 @@ function SettingsWindow() {
         });
         await loadData();
         emit("asset-changed", {});
-        showStatus("GIF imported!");
+        showStatus(MESSAGES[currentLanguage].statusGifImported);
       }
     } catch (e) {
-      showStatus("Import failed: " + String(e));
+      showStatus(`${MESSAGES[currentLanguage].statusImportFailed}${String(e)}`);
     }
   };
 
@@ -88,9 +193,9 @@ function SettingsWindow() {
         setConfig({ ...config, current_asset_id: assetId });
       }
       emit("asset-changed", {});
-      showStatus("Pet changed!");
+      showStatus(MESSAGES[currentLanguage].statusPetChanged);
     } catch (e) {
-      showStatus("Failed: " + String(e));
+      showStatus(`${MESSAGES[currentLanguage].statusFailed}${String(e)}`);
     }
   };
 
@@ -99,9 +204,9 @@ function SettingsWindow() {
       await invoke("delete_asset", { assetId });
       await loadData();
       emit("asset-changed", {});
-      showStatus("Asset deleted");
+      showStatus(MESSAGES[currentLanguage].statusAssetDeleted);
     } catch (e) {
-      showStatus("Failed: " + String(e));
+      showStatus(`${MESSAGES[currentLanguage].statusFailed}${String(e)}`);
     }
   };
 
@@ -111,27 +216,27 @@ function SettingsWindow() {
       if (config) {
         setConfig({ ...config, pet_position: null });
       }
-      showStatus("Position reset!");
+      showStatus(MESSAGES[currentLanguage].statusPositionReset);
     } catch (e) {
-      showStatus("Failed: " + String(e));
+      showStatus(`${MESSAGES[currentLanguage].statusFailed}${String(e)}`);
     }
   };
 
   if (!config) {
-    return <div className="settings-container">Loading...</div>;
+    return <div className="settings-container">{t.loading}</div>;
   }
 
   return (
     <div className="settings-container">
-      <h2>QimoBar Settings</h2>
+      <h2>{t.windowTitle}</h2>
 
       {status && <div className="status-bar">{status}</div>}
 
       <section className="settings-section">
-        <h3>Display</h3>
+        <h3>{t.sectionDisplay}</h3>
 
         <div className="setting-row">
-          <label>Scale</label>
+          <label>{t.labelScale}</label>
           <div className="setting-control">
             <input
               type="range"
@@ -148,7 +253,7 @@ function SettingsWindow() {
         </div>
 
         <div className="setting-row">
-          <label>Opacity</label>
+          <label>{t.labelOpacity}</label>
           <div className="setting-control">
             <input
               type="range"
@@ -165,32 +270,44 @@ function SettingsWindow() {
         </div>
 
         <div className="setting-row">
-          <label>Always on Top</label>
+          <label>{t.labelAlwaysOnTop}</label>
           <input
             type="checkbox"
             checked={config.always_on_top}
-            onChange={(e) =>
-              updateConfig({ always_on_top: e.target.checked })
-            }
+            onChange={(e) => updateConfig({ always_on_top: e.target.checked })}
           />
         </div>
 
         <div className="setting-row">
-          <label>Click Through</label>
+          <label>{t.labelClickThrough}</label>
           <input
             type="checkbox"
             checked={config.click_through}
-            onChange={(e) =>
-              updateConfig({ click_through: e.target.checked })
-            }
+            onChange={(e) => updateConfig({ click_through: e.target.checked })}
           />
         </div>
       </section>
 
       <section className="settings-section">
-        <h3>System</h3>
+        <h3>{t.sectionSystem}</h3>
+
         <div className="setting-row">
-          <label>Launch at Startup</label>
+          <label htmlFor="language-select">{t.labelLanguage}</label>
+          <select
+            id="language-select"
+            className="language-select"
+            value={currentLanguage}
+            onChange={(e) =>
+              updateConfig({ language: normalizeLanguage(e.target.value) })
+            }
+          >
+            <option value="en">English</option>
+            <option value="zh-CN">简体中文</option>
+          </select>
+        </div>
+
+        <div className="setting-row">
+          <label>{t.labelLaunchAtStartup}</label>
           <input
             type="checkbox"
             checked={config.launch_at_startup}
@@ -199,23 +316,22 @@ function SettingsWindow() {
             }
           />
         </div>
+
         <div className="setting-row">
           <button className="btn-secondary" onClick={handleResetPosition}>
-            Reset Position
+            {t.buttonResetPosition}
           </button>
         </div>
       </section>
 
       <section className="settings-section">
-        <h3>GIF Assets</h3>
+        <h3>{t.sectionAssets}</h3>
         <button className="btn-primary" onClick={handleImportGif}>
-          Import GIF...
+          {t.buttonImportGif}
         </button>
 
         <div className="asset-list">
-          {assets.length === 0 && (
-            <p className="empty-hint">No GIF imported yet</p>
-          )}
+          {assets.length === 0 && <p className="empty-hint">{t.noGifImported}</p>}
           {assets.map((asset) => (
             <div
               key={asset.id}
@@ -246,7 +362,7 @@ function SettingsWindow() {
                     className="btn-small"
                     onClick={() => handleSelectAsset(asset.id)}
                   >
-                    Use
+                    {t.buttonUse}
                   </button>
                 )}
                 <button

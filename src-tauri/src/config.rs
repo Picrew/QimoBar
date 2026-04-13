@@ -22,12 +22,14 @@ pub struct AssetItem {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
 pub struct AppConfig {
     pub launch_at_startup: bool,
     pub click_through: bool,
     pub always_on_top: bool,
     pub pet_scale: f64,
     pub pet_opacity: f64,
+    pub language: String,
     pub current_asset_id: Option<String>,
     pub pet_position: Option<Position>,
     pub pet_visible: bool,
@@ -41,6 +43,7 @@ impl Default for AppConfig {
             always_on_top: true,
             pet_scale: 1.0,
             pet_opacity: 1.0,
+            language: "en".to_string(),
             current_asset_id: None,
             pet_position: None,
             pet_visible: true,
