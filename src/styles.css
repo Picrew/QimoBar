@@ -1,0 +1,326 @@
+/* ===== Global Reset ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ===== Pet Window ===== */
+.pet-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.pet-container:active {
+  cursor: grabbing;
+}
+
+.pet-gif {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  image-rendering: auto;
+}
+
+.pet-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: #888;
+  font-size: 12px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px dashed rgba(128, 128, 128, 0.4);
+  border-radius: 12px;
+  width: 160px;
+  height: 160px;
+}
+
+.pet-placeholder span {
+  font-size: 40px;
+}
+
+.pet-placeholder small {
+  font-size: 11px;
+  color: #999;
+}
+
+/* ===== Settings Window ===== */
+.settings-container {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  padding: 20px;
+  max-width: 460px;
+  margin: 0 auto;
+  color: #333;
+  background: #fafafa;
+  min-height: 100vh;
+  font-size: 13px;
+}
+
+.settings-container h2 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #222;
+}
+
+.settings-section {
+  background: white;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.settings-section h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+}
+
+.setting-row label {
+  font-size: 13px;
+  color: #333;
+}
+
+.setting-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.setting-control input[type="range"] {
+  width: 140px;
+  accent-color: #4a90d9;
+}
+
+.setting-control span {
+  font-size: 12px;
+  color: #666;
+  min-width: 40px;
+  text-align: right;
+}
+
+input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #4a90d9;
+}
+
+.status-bar {
+  background: #e8f5e9;
+  color: #2e7d32;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  text-align: center;
+}
+
+.btn-primary {
+  background: #4a90d9;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.btn-primary:hover {
+  background: #3a7bc8;
+}
+
+.btn-secondary {
+  background: #eee;
+  color: #333;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.btn-secondary:hover {
+  background: #ddd;
+}
+
+.btn-small {
+  background: #f0f0f0;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.btn-small:hover {
+  background: #e0e0e0;
+}
+
+.btn-danger {
+  color: #d32f2f;
+}
+
+.btn-danger:hover {
+  background: #ffebee;
+}
+
+.asset-list {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.asset-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 8px;
+  background: #f8f8f8;
+  border: 2px solid transparent;
+}
+
+.asset-item.active {
+  border-color: #4a90d9;
+  background: #eef4fb;
+}
+
+.asset-preview {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  border-radius: 6px;
+  background: #f0f0f0;
+}
+
+.asset-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.asset-name {
+  font-size: 12px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.asset-meta {
+  font-size: 11px;
+  color: #999;
+}
+
+.asset-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.empty-hint {
+  color: #aaa;
+  font-size: 12px;
+  text-align: center;
+  padding: 12px;
+}
+
+/* ===== Dark Mode ===== */
+@media (prefers-color-scheme: dark) {
+  .settings-container {
+    background: #1a1a1a;
+    color: #e0e0e0;
+  }
+
+  .settings-container h2 {
+    color: #eee;
+  }
+
+  .settings-section {
+    background: #2a2a2a;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+
+  .settings-section h3 {
+    color: #999;
+  }
+
+  .setting-row label {
+    color: #ddd;
+  }
+
+  .setting-control span {
+    color: #aaa;
+  }
+
+  .status-bar {
+    background: #1b3320;
+    color: #66bb6a;
+  }
+
+  .btn-secondary {
+    background: #3a3a3a;
+    color: #ddd;
+  }
+
+  .btn-secondary:hover {
+    background: #444;
+  }
+
+  .btn-small {
+    background: #3a3a3a;
+    color: #ddd;
+  }
+
+  .btn-small:hover {
+    background: #444;
+  }
+
+  .asset-item {
+    background: #333;
+  }
+
+  .asset-item.active {
+    background: #1e3352;
+    border-color: #4a90d9;
+  }
+
+  .asset-preview {
+    background: #444;
+  }
+
+  .empty-hint {
+    color: #666;
+  }
+}
