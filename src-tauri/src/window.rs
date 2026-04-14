@@ -19,6 +19,10 @@ pub fn create_pet_window(app: &AppHandle) -> Result<(), Box<dyn std::error::Erro
         if is_position_visible(app, pos.x, pos.y) {
             builder = builder.position(pos.x, pos.y);
             use_saved_pos = true;
+        } else if let Some((legacy_x, legacy_y)) = try_convert_legacy_physical_position(app, pos.x, pos.y) {
+            // Compatibility path for older versions that persisted physical pixels.
+            builder = builder.position(legacy_x, legacy_y);
+            use_saved_pos = true;
         }
     }
 
@@ -55,10 +59,12 @@ fn is_position_visible(app: &AppHandle, x: f64, y: f64) -> bool {
     for monitor in &monitors {
         let pos = monitor.position();
         let size = monitor.size();
-        let mx = pos.x as f64;
-        let my = pos.y as f64;
-        let mw = size.width as f64;
-        let mh = size.height as f64;
+        // Convert to logical coordinates to match WebviewWindowBuilder::position.
+        let scale = monitor.scale_factor();
+        let mx = pos.x as f64 / scale;
+        let my = pos.y as f64 / scale;
+        let mw = size.width as f64 / scale;
+        let mh = size.height as f64 / scale;
 
         // Check if the point is within this monitor's bounds (with 50px margin)
         if x >= mx - 50.0 && x < mx + mw + 50.0 && y >= my - 50.0 && y < my + mh + 50.0 {
@@ -67,4 +73,25 @@ fn is_position_visible(app: &AppHandle, x: f64, y: f64) -> bool {
     }
 
     false
+}
+
+fn try_convert_legacy_physical_position(app: &AppHandle, x: f64, y: f64) -> Option<(f64, f64)> {
+    let scale = app
+        .primary_monitor()
+        .ok()
+        .flatten()
+        .map(|m| m.scale_factor())
+        .unwrap_or(1.0);
+
+    if scale <= 1.0 {
+        return None;
+    }
+
+    let logical_x = x / scale;
+    let logical_y = y / scale;
+    if is_position_visible(app, logical_x, logical_y) {
+        Some((logical_x, logical_y))
+    } else {
+        None
+    }
 }

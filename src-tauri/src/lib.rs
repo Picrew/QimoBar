@@ -12,6 +12,12 @@ use tauri_plugin_autostart::MacosLauncher;
 pub fn run() {
     let app_config = config::load_config();
     let app_assets = config::load_assets();
+    let has_current_asset = app_config
+        .current_asset_id
+        .as_ref()
+        .map(|id| app_assets.assets.iter().any(|asset| &asset.id == id))
+        .unwrap_or(false);
+    let should_open_import_on_start = !has_current_asset || !app_config.pet_visible;
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
@@ -44,7 +50,7 @@ pub fn run() {
             commands::get_gif_data,
             commands::reset_position,
         ])
-        .setup(|app| {
+        .setup(move |app| {
             let handle = app.handle().clone();
 
             // Create tray
@@ -52,6 +58,14 @@ pub fn run() {
 
             // Create pet window
             window::create_pet_window(&handle).expect("Failed to create pet window");
+
+            // If no valid current asset exists, open settings so users immediately see import entry.
+            if should_open_import_on_start {
+                if let Some(window) = handle.get_webview_window("pet") {
+                    window.show().ok();
+                }
+                tray::open_settings_window(&handle);
+            }
 
             Ok(())
         })

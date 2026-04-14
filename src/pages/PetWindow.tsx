@@ -93,9 +93,11 @@ function PetWindow() {
       try {
         const window = getCurrentWebviewWindow();
         const pos = await window.outerPosition();
+        const scale = await window.scaleFactor();
         await invoke("save_position", {
-          x: pos.x,
-          y: pos.y,
+          // Store logical coordinates so startup positioning is stable on HiDPI displays.
+          x: pos.x / scale,
+          y: pos.y / scale,
         });
       } catch (e) {
         console.error("Failed to save position:", e);

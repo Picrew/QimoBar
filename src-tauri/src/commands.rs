@@ -50,6 +50,7 @@ pub fn get_assets(state: State<'_, config::AppState>) -> Result<Vec<AssetItem>, 
 
 #[tauri::command]
 pub fn import_gif(
+    app: AppHandle,
     state: State<'_, config::AppState>,
     source_path: String,
     source_type: String,
@@ -99,7 +100,16 @@ pub fn import_gif(
     // Set as current asset
     let mut cfg = state.config.lock().map_err(|e| e.to_string())?;
     cfg.current_asset_id = Some(id);
+    cfg.pet_visible = true;
     config::save_config(&cfg)?;
+
+    // Ensure pet window is visible after importing from tray/settings
+    if let Some(window) = app.get_webview_window("pet") {
+        window.show().ok();
+        // Imported successfully: bring pet back into viewport.
+        window.center().ok();
+        window.set_focus().ok();
+    }
 
     Ok(asset)
 }
@@ -126,12 +136,20 @@ pub fn delete_asset(state: State<'_, config::AppState>, asset_id: String) -> Res
 
 #[tauri::command]
 pub fn set_current_asset(
+    app: AppHandle,
     state: State<'_, config::AppState>,
     asset_id: String,
 ) -> Result<(), String> {
     let mut cfg = state.config.lock().map_err(|e| e.to_string())?;
     cfg.current_asset_id = Some(asset_id);
+    cfg.pet_visible = true;
     config::save_config(&cfg)?;
+
+    if let Some(window) = app.get_webview_window("pet") {
+        window.show().ok();
+        window.center().ok();
+    }
+
     Ok(())
 }
 

@@ -46,6 +46,19 @@ pub fn create_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
             "import_gif" => {
+                // Make sure the pet is visible before opening the import flow.
+                if let Some(window) = app.get_webview_window("pet") {
+                    window.show().ok();
+                    window.set_focus().ok();
+                }
+
+                if let Some(state) = app.try_state::<config::AppState>() {
+                    if let Ok(mut cfg) = state.config.lock() {
+                        cfg.pet_visible = true;
+                        config::save_config(&cfg).ok();
+                    }
+                }
+
                 app.emit("tray-import-gif", ()).ok();
             }
             "settings" => {
