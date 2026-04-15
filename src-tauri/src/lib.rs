@@ -53,6 +53,9 @@ pub fn run() {
         .setup(move |app| {
             let handle = app.handle().clone();
 
+            #[cfg(target_os = "macos")]
+            tray::create_app_menu(&handle).expect("Failed to create app menu");
+
             // Create tray
             tray::create_tray(&handle).expect("Failed to create tray");
 

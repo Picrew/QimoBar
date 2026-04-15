@@ -1,7 +1,7 @@
 use crate::config;
 use tauri::{
     image::Image,
-    menu::{MenuBuilder, MenuItemBuilder},
+    menu::{MenuBuilder, MenuItemBuilder, SubmenuBuilder},
     tray::TrayIconBuilder,
     AppHandle, Emitter, Manager,
 };
@@ -25,7 +25,9 @@ pub fn create_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
 
     TrayIconBuilder::new()
         .icon(icon)
+        .icon_as_template(true)
         .menu(&menu)
+        .show_menu_on_left_click(true)
         .tooltip("QimoBar - Desktop Pet")
         .on_menu_event(move |app, event| match event.id().as_ref() {
             "show_hide" => {
@@ -70,6 +72,56 @@ pub fn create_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
             _ => {}
         })
         .build(app)?;
+
+    Ok(())
+}
+
+#[cfg(target_os = "macos")]
+pub fn create_app_menu(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
+    let show_hide = MenuItemBuilder::with_id("show_hide", "Show/Hide Pet").build(app)?;
+    let import_gif = MenuItemBuilder::with_id("import_gif", "Import GIF...").build(app)?;
+    let settings = MenuItemBuilder::with_id("settings", "Settings...").build(app)?;
+
+    let app_submenu = SubmenuBuilder::new(app, app.package_info().name.clone())
+        .about(None)
+        .separator()
+        .services()
+        .separator()
+        .item(&show_hide)
+        .item(&import_gif)
+        .item(&settings)
+        .separator()
+        .hide()
+        .hide_others()
+        .show_all()
+        .separator()
+        .quit()
+        .build()?;
+
+    let edit_submenu = SubmenuBuilder::new(app, "Edit")
+        .undo()
+        .redo()
+        .separator()
+        .cut()
+        .copy()
+        .paste()
+        .select_all()
+        .build()?;
+
+    let window_submenu = SubmenuBuilder::new(app, "Window")
+        .minimize()
+        .maximize()
+        .separator()
+        .close_window()
+        .build()?;
+
+    let menu = MenuBuilder::new(app)
+        .item(&app_submenu)
+        .item(&edit_submenu)
+        .item(&window_submenu)
+        .build()?;
+
+    app.set_menu(menu)?;
 
     Ok(())
 }
